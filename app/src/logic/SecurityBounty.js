@@ -1,10 +1,12 @@
 import { abi } from "genlayer-js";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, fromHex } from "viem";
 
 const STUDIO_CHAIN_ID = 61999;
 const FALLBACK_GAS = 500000n;
 const GAS_BUFFER_PERCENT = 20n;
 const EVM_WALLET_KEY = "sb_evm_wallet";
+const DIRECT_STUDIO_RPC_URL = import.meta.env.VITE_STUDIO_URL || "https://studio.genlayer.com/api";
+const PRODUCTION_RPC_PATH = "/api/genlayer-rpc";
 
 const toBigInt = (value, fallback = 0n) => {
   if (value == null) return fallback;
@@ -18,6 +20,43 @@ const toBigInt = (value, fallback = 0n) => {
 const toNumber = (value) => Number(toBigInt(value));
 const toHex = (value) => `0x${toBigInt(value).toString(16)}`;
 const at = (record, key, index, fallback = "") => record?.[key] ?? record?.[index] ?? fallback;
+
+const getReadRpcUrl = () => {
+  if (typeof window === "undefined") return DIRECT_STUDIO_RPC_URL;
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  return isLocalhost ? DIRECT_STUDIO_RPC_URL : `${window.location.origin}${PRODUCTION_RPC_PATH}`;
+};
+
+const makeCalldataObject = (method, args = []) => {
+  const data = { method };
+  if (args.length) data.args = args;
+  return data;
+};
+
+const rpcRequest = (method, params) => new Promise((resolve, reject) => {
+  if (typeof XMLHttpRequest === "undefined") {
+    reject(new Error("Browser RPC transport is unavailable."));
+    return;
+  }
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", getReadRpcUrl(), true);
+  xhr.setRequestHeader("content-type", "application/json");
+  xhr.onload = () => {
+    try {
+      const payload = JSON.parse(xhr.responseText || "{}");
+      if (payload.error) {
+        reject(new Error(payload.error.message || "GenLayer RPC error"));
+        return;
+      }
+      resolve(payload.result);
+    } catch (error) {
+      reject(error);
+    }
+  };
+  xhr.onerror = () => reject(new Error("GenLayer RPC request failed."));
+  xhr.send(JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method, params }));
+});
 
 const toBool = (value) => {
   if (value === true || value === 1 || value === 1n) return true;
@@ -102,8 +141,11 @@ class SecurityBounty {
   setClient(c) { this.client = c; }
 
   async _read(fn, args = []) {
-    const r = await this.client.readContract({ address: this.address, functionName: fn, args });
-    return r || [];
+    const encodedData = abi.calldata.encode(makeCalldataObject(fn, args));
+    const data = abi.transactions.serializeOne(encodedData);
+    const result = await rpcRequest("eth_call", [{ to: this.address, data }, "latest"]);
+    if (!result) return [];
+    return abi.calldata.decode(fromHex(result, "bytes")) || [];
   }
 
   async _write(fn, args = [], value = 0n) {
