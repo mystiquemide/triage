@@ -53,7 +53,16 @@
         <div v-if="tab==='programs'" key="programs">
           <div class="flex justify-between items-center mb-8">
             <h2 class="text-3xl font-bold">Active Programs</h2>
-            <button v-if="evmAddress" @click="showCreate=true" class="pill-button primary-pill">Create Program</button>
+            <div class="flex items-center gap-2">
+              <button @click="loadPrograms" class="pill-button secondary-pill">Refresh</button>
+              <button v-if="evmAddress" @click="showCreate=true" class="pill-button primary-pill">Create Program</button>
+            </div>
+          </div>
+          <div v-if="lastTransactionHash" class="internal-card mb-6 py-4 px-5 border-emerald-400 border-opacity-20">
+            <p class="text-xs text-gray-400 mono-text">
+              Last transaction: <span class="text-emerald-400">{{ shortHash(lastTransactionHash) }}</span>.
+              If a new program is not visible yet, wait for StudioNet finalization and refresh.
+            </p>
           </div>
           <div v-if="isLoading" class="grid lg:grid-cols-2 gap-6 mt-8">
             <div v-for="i in 4" :key="i" class="internal-card animate-pulse border-white border-opacity-5 border-dashed min-h-[250px] flex flex-col justify-between">
@@ -68,7 +77,8 @@
           <div v-else-if="!programs.length" class="internal-card text-center py-24 flex flex-col items-center justify-center border-dashed border-opacity-20 mt-8">
             <svg class="w-12 h-12 text-gray-600 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             <h3 class="text-lg font-bold text-gray-300 mb-1">No Active Programs</h3>
-            <p class="text-sm text-gray-500 mono-text">Check back later or deploy a new program.</p>
+            <p class="text-sm text-gray-500 mono-text">If you just created one, wait for StudioNet to finalize the transaction and refresh.</p>
+            <button @click="loadPrograms" class="pill-button secondary-pill mt-6">Refresh Programs</button>
           </div>
           <div v-else class="grid lg:grid-cols-2 gap-6">
             <div v-for="p in programs" :key="p.id" class="internal-card flex flex-col justify-between">
@@ -484,6 +494,7 @@ const selectedProgram = ref(null);
 const selectedReport = ref(null);
 const isLoading = ref(true);
 const isLoadingReports = ref(true);
+const lastTransactionHash = ref("");
 
 const tabs = [
   { id: "programs", label: "Programs" },
@@ -519,6 +530,7 @@ const parseJson = value => { try { return value ? JSON.parse(value) : {}; } catc
 const programMeta = p => parseJson(p?.program_metadata);
 const reportMeta = r => parseJson(r?.report_metadata);
 const shortTarget = v => v ? `${v.slice(0,18)}${v.length > 18 ? "..." : ""}` : "No target";
+const shortHash = v => v ? `${v.slice(0,10)}...${v.slice(-8)}` : "";
 const summarize = v => v ? `${String(v).slice(0, 80)}${String(v).length > 80 ? "..." : ""}` : "-";
 const isProgramActive = p => p?.is_active === true || p?.is_active === "true";
 const isProgramFunded = p => Number.parseInt(String(p?.escrow_balance || "0"), 10) > 0;
@@ -699,7 +711,7 @@ const startReport = (program) => {
 const createProgram = async () => {
   if(!cf.value.name||!cf.value.target) return;
   creating.value = true;
-  try { ensureLocalAccount(); const name = cf.value.name; const metadata = JSON.stringify({ brief: cf.value.brief, inScope: cf.value.inScope, outOfScope: cf.value.outOfScope, rules: cf.value.rules, safeHarbor: cf.value.safeHarbor, disclosurePolicy: cf.value.disclosurePolicy, rewardTable: cf.value.rewardTable }); const escrowAmount = BigInt(String(cf.value.escrow || "0")); const tx = await sb.createProgram(name, cf.value.target, cf.value.desc||"Bounty", cf.value.pool||1000000, cf.value.max||50000, metadata, escrowAmount); toast_(tx.signer === "browser-wallet" ? "Wallet transaction sent. Waiting for StudioNet..." : "StudioNet wallet transport failed, submitted with GenLayer signer. Waiting...","ok"); showCreate.value=false; cf.value=blankProgram(); await loadWalletBalance(); const expectedId = `${name.toLowerCase().replaceAll(" ", "_")}_61999`; const found = await refreshProgramsUntil(() => programs.value.some(p => p.id === expectedId), 20); const created = programs.value.find(p => p.id === expectedId); if (created) startReport(created); toast_(found ? "Created! Program selected for report submission." : "Transaction sent, but program is not finalized yet. Refresh in a moment.","ok"); }
+  try { ensureLocalAccount(); const name = cf.value.name; const metadata = JSON.stringify({ brief: cf.value.brief, inScope: cf.value.inScope, outOfScope: cf.value.outOfScope, rules: cf.value.rules, safeHarbor: cf.value.safeHarbor, disclosurePolicy: cf.value.disclosurePolicy, rewardTable: cf.value.rewardTable }); const escrowAmount = BigInt(String(cf.value.escrow || "0")); const tx = await sb.createProgram(name, cf.value.target, cf.value.desc||"Bounty", cf.value.pool||1000000, cf.value.max||50000, metadata, escrowAmount); lastTransactionHash.value = tx.hash || ""; toast_(tx.signer === "browser-wallet" ? "Wallet transaction sent. Waiting for StudioNet..." : "StudioNet wallet transport failed, submitted with GenLayer signer. Waiting...","ok"); showCreate.value=false; cf.value=blankProgram(); await loadWalletBalance(); const expectedId = `${name.toLowerCase().replaceAll(" ", "_")}_61999`; const found = await refreshProgramsUntil(() => programs.value.some(p => p.id === expectedId), 20); const created = programs.value.find(p => p.id === expectedId); if (created) startReport(created); toast_(found ? "Created! Program selected for report submission." : "Transaction sent, but program is not finalized yet. Refresh in a moment.","ok"); }
   catch(e) { toast_(errorMessage(e),"err"); }
   finally { creating.value = false; }
 };
