@@ -20,9 +20,13 @@ Bug bounty programs are valuable, but first-pass triage is slow, repetitive, and
 
 ## Screenshots
 
-| Dashboard | Mobile |
-|---|---|
-| ![Dashboard](docs/assets/screenshot-dashboard.png) | ![Mobile](docs/assets/screenshot-mobile.png) |
+<p>
+  <img src="docs/assets/screenshot-dashboard.png" alt="Triage landing screen" width="760" />
+</p>
+
+<p>
+  <img src="docs/assets/screenshot-mobile.png" alt="Triage mobile landing screen" width="260" />
+</p>
 
 ## Tech Stack
 
