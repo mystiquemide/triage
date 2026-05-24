@@ -54,3 +54,4 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 app/.vscode/
+.vercel

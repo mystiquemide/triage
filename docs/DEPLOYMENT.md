@@ -58,6 +58,10 @@ npm run preview
 
 ## Vercel Deployment
 
+Current production frontend:
+
+- [https://triage-weld.vercel.app](https://triage-weld.vercel.app)
+
 The frontend lives in `app/`.
 
 ```bash
