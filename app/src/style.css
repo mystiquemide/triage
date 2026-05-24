@@ -1063,6 +1063,29 @@
   font-size: 12px;
 }
 
+.wallet-faucet-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(52, 211, 153, 0.34);
+  border-radius: 8px;
+  background: rgba(52, 211, 153, 0.06);
+  color: #34d399;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.wallet-faucet-link:hover {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.12);
+}
+
 .wallet-chip-label {
   color: rgba(202, 202, 202, 0.55);
   font-size: 9px;
@@ -1119,6 +1142,11 @@
 
   .wallet-chip-value,
   .wallet-address-chip {
+    font-size: 10px;
+  }
+
+  .wallet-faucet-link {
+    padding: 0 8px;
     font-size: 10px;
   }
 }

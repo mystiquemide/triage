@@ -27,6 +27,15 @@
               <span class="hidden lg:inline xl:hidden">{{ evmAddress.slice(0,6) }}...</span>
               <span class="lg:hidden">{{ evmAddress.slice(0,6) }}...</span>
             </div>
+            <a
+              :href="GENLAYER_FAUCET_URL"
+              target="_blank"
+              rel="noreferrer"
+              class="wallet-faucet-link"
+              title="Open GenLayer testnet faucet"
+            >
+              Faucet
+            </a>
             <button @click="disconnect" class="pill-button secondary-pill !text-xs !py-1 !px-2 md:!py-2 md:!px-4">Disconnect</button>
           </div>
         </div>
@@ -445,6 +454,7 @@ import {
 import SecurityBounty from "../logic/SecurityBounty";
 
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+const GENLAYER_FAUCET_URL = "https://testnet-faucet.genlayer.foundation/";
 
 const account = ref(getAccount());
 const client = ref(createBountyClient(account.value));
