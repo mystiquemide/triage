@@ -5,6 +5,7 @@ const STUDIO_CHAIN_ID = 61999;
 const FALLBACK_GAS = 500000n;
 const GAS_BUFFER_PERCENT = 20n;
 const EVM_WALLET_KEY = "sb_evm_wallet";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const DIRECT_STUDIO_RPC_URL = import.meta.env.VITE_STUDIO_URL || "https://studio.genlayer.com/api";
 const PRODUCTION_RPC_PATH = "/api/genlayer-rpc";
 
@@ -141,7 +142,8 @@ class SecurityBounty {
   async _read(fn, args = []) {
     const encodedData = abi.calldata.encode(makeCalldataObject(fn, args));
     const data = abi.transactions.serializeOne(encodedData);
-    const result = await rpcRequest("eth_call", [{ to: this.address, data }, "latest"]);
+    const from = this.client?.account?.address || ZERO_ADDRESS;
+    const result = await rpcRequest("eth_call", [{ to: this.address, from, data }, "latest"]);
     if (!result) return [];
     return abi.calldata.decode(fromHex(result, "bytes")) || [];
   }

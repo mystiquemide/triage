@@ -463,7 +463,7 @@ import {
 } from "../services/genlayer";
 import SecurityBounty from "../logic/SecurityBounty";
 
-const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || "0x7860cc3Ff12FaCb93143Ca955e74Ab5dfbAFCEBa";
 const GENLAYER_FAUCET_URL = "https://testnet-faucet.genlayer.foundation/";
 
 const account = ref(getAccount());
