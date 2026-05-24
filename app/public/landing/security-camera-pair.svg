@@ -1,0 +1,42 @@
+<svg width="1000" height="640" viewBox="0 0 1000 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="38" dy="54" stdDeviation="10" flood-color="#010713" flood-opacity="0.55"/>
+    </filter>
+    <linearGradient id="body" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#ffffff"/>
+      <stop offset="0.42" stop-color="#dce8ef"/>
+      <stop offset="1" stop-color="#8fa4b1"/>
+    </linearGradient>
+    <linearGradient id="side" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#c8d8df"/>
+      <stop offset="1" stop-color="#617582"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#shadow)" transform="translate(170 222) rotate(-2)">
+    <path d="M57 42h170l24 27-17 77H57V42Z" fill="url(#body)"/>
+    <path d="M57 42 25 82v54l32 10V42Z" fill="#9eb2bd"/>
+    <path d="M25 82h75l-10 56H25V82Z" fill="#0a1723"/>
+    <path d="M43 95h35l-5 25H43V95Z" fill="#07111a"/>
+    <path d="M91 142h128l15-69H105l-14 69Z" fill="url(#side)" opacity=".78"/>
+    <path d="M104 30h132l15 12H57l47-12Z" fill="#f6fbff"/>
+    <path d="M93 153h82l39 62h-42l-79-62Z" fill="#182835"/>
+    <circle cx="60" cy="108" r="10" fill="#7be5ee"/>
+    <circle cx="60" cy="108" r="5" fill="#07111a"/>
+    <path d="M57 42h170l24 27-17 77H57V42Z" stroke="#d8edf5" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+
+  <g filter="url(#shadow)" transform="translate(610 220) rotate(7)">
+    <path d="M57 42h170l24 27-17 77H57V42Z" fill="url(#body)"/>
+    <path d="M57 42 25 82v54l32 10V42Z" fill="#9eb2bd"/>
+    <path d="M25 82h75l-10 56H25V82Z" fill="#0a1723"/>
+    <path d="M43 95h35l-5 25H43V95Z" fill="#07111a"/>
+    <path d="M91 142h128l15-69H105l-14 69Z" fill="url(#side)" opacity=".78"/>
+    <path d="M104 30h132l15 12H57l47-12Z" fill="#f6fbff"/>
+    <path d="M93 153h82l39 62h-42l-79-62Z" fill="#182835"/>
+    <circle cx="60" cy="108" r="10" fill="#7be5ee"/>
+    <circle cx="60" cy="108" r="5" fill="#07111a"/>
+    <path d="M57 42h170l24 27-17 77H57V42Z" stroke="#d8edf5" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+</svg>
