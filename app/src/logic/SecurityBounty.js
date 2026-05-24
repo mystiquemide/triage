@@ -28,9 +28,7 @@ const getReadRpcUrl = () => {
 };
 
 const makeCalldataObject = (method, args = []) => {
-  const data = { method };
-  if (args.length) data.args = args;
-  return data;
+  return { method, args };
 };
 
 const rpcRequest = (method, params) => new Promise((resolve, reject) => {
