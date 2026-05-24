@@ -30,6 +30,8 @@ jobs:
 
   contract-direct-tests:
     runs-on: ubuntu-latest
+    env:
+      GENVM_VERSION: v0.2.16
 
     steps:
       - name: Checkout
