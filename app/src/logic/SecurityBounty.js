@@ -20,7 +20,10 @@ const toBigInt = (value, fallback = 0n) => {
 
 const toNumber = (value) => Number(toBigInt(value));
 const toHex = (value) => `0x${toBigInt(value).toString(16)}`;
-const at = (record, key, index, fallback = "") => record?.[key] ?? record?.[index] ?? fallback;
+const at = (record, key, index, fallback = "") => {
+  if (record instanceof Map) return record.get(key) ?? record.get(index) ?? fallback;
+  return record?.[key] ?? record?.[index] ?? fallback;
+};
 
 const getReadRpcUrl = () => {
   if (typeof window === "undefined") return DIRECT_STUDIO_RPC_URL;
