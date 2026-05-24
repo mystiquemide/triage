@@ -18,7 +18,7 @@ Bug bounty programs are valuable, but first-pass triage is slow, repetitive, and
 - Query accepted findings through a shared vulnerability registry.
 - View wallet address and wallet GEN balance inside the app shell.
 
-## Screenshots
+## Product Screens
 
 <p>
   <img src="docs/assets/screenshot-dashboard.png" alt="Triage landing screen" width="760" />
