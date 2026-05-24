@@ -6,6 +6,17 @@ const EVM_KEY = "sb_evm_wallet";
 const STUDIO_CHAIN_ID = 61999;
 const STUDIO_CHAIN_ID_HEX = `0x${STUDIO_CHAIN_ID.toString(16)}`;
 const STUDIO_EXPLORER_URL = "https://genlayer-explorer.vercel.app";
+const DIRECT_STUDIO_RPC_URL = import.meta.env.VITE_STUDIO_URL || "https://studio.genlayer.com/api";
+const PRODUCTION_RPC_PATH = "/api/genlayer-rpc";
+
+function getStudioRpcUrl() {
+  if (typeof window === "undefined") return DIRECT_STUDIO_RPC_URL;
+
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  if (isLocalhost) return DIRECT_STUDIO_RPC_URL;
+
+  return `${window.location.origin}${PRODUCTION_RPC_PATH}`;
+}
 
 export function getAccount() {
   const pk = localStorage.getItem(KEY);
@@ -47,7 +58,7 @@ async function switchToStudioNetwork(provider) {
           symbol: "GEN",
           decimals: 18,
         },
-        rpcUrls: [import.meta.env.VITE_STUDIO_URL],
+        rpcUrls: [getStudioRpcUrl()],
         blockExplorerUrls: [STUDIO_EXPLORER_URL],
       }],
     });
@@ -112,6 +123,6 @@ export function createBountyClient(account = null) {
   return createClient({
     chain: simulator,
     account,
-    endpoint: import.meta.env.VITE_STUDIO_URL,
+    endpoint: getStudioRpcUrl(),
   });
 }
