@@ -22,6 +22,7 @@
         <!-- Left: Logo -->
         <div class="w-1/3 flex justify-start items-center">
           <div class="brand logo-mark-sleek" aria-label="Triage">
+            <img class="triage-brand-mark" src="/triage-logo.svg" alt="" aria-hidden="true" />
             <span class="text-logo">Triage</span>
           </div>
         </div>

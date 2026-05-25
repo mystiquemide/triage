@@ -1,0 +1,45 @@
+<svg width="500" height="500" viewBox="170 110 340 390" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Triage icon mark</title>
+  <desc>Triage logo: AI brain node feeding a priority funnel, transparent background.</desc>
+
+  <circle cx="340" cy="152" r="22" fill="#282B5D"/>
+  <circle cx="340" cy="152" r="14" fill="#110FFF"/>
+  <circle cx="340" cy="152" r="7" fill="#BCA2FF"/>
+
+  <line x1="318" y1="152" x2="296" y2="152" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="296" y1="152" x2="296" y2="136" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="296" cy="133" r="3.5" fill="#BCA2FF"/>
+  <line x1="296" y1="152" x2="276" y2="152" stroke="#BCA2FF" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="273" cy="152" r="2.5" fill="#BCA2FF" opacity="0.5"/>
+
+  <line x1="362" y1="152" x2="384" y2="152" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="384" y1="152" x2="384" y2="136" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="384" cy="133" r="3.5" fill="#BCA2FF"/>
+  <line x1="384" y1="152" x2="404" y2="152" stroke="#BCA2FF" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="407" cy="152" r="2.5" fill="#BCA2FF" opacity="0.5"/>
+
+  <line x1="340" y1="174" x2="340" y2="194" stroke="#CACACA" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 3"/>
+
+  <polygon points="210,198 470,198 440,256 260,256" fill="#ef4444"/>
+  <text x="340" y="233" font-family="Helvetica Neue,Arial,sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="2">CRITICAL</text>
+
+  <polygon points="262,264 438,264 408,322 292,322" fill="#f59e0b"/>
+  <text x="340" y="299" font-family="Helvetica Neue,Arial,sans-serif" font-weight="800" font-size="12" fill="#ffffff" text-anchor="middle" letter-spacing="2">MEDIUM</text>
+
+  <polygon points="294,330 406,330 382,388 318,388" fill="#22c55e"/>
+  <text x="340" y="365" font-family="Helvetica Neue,Arial,sans-serif" font-weight="800" font-size="12" fill="#ffffff" text-anchor="middle" letter-spacing="2">LOW</text>
+
+  <polygon points="320,396 360,396 348,430 332,430" fill="#282B5D"/>
+
+  <circle cx="340" cy="446" r="16" fill="#110FFF"/>
+  <circle cx="340" cy="446" r="9" fill="#CACACA"/>
+  <circle cx="340" cy="446" r="4" fill="#BCA2FF"/>
+
+  <line x1="324" y1="446" x2="308" y2="446" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="308" y1="446" x2="308" y2="462" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="308" cy="465" r="3" fill="#BCA2FF"/>
+
+  <line x1="356" y1="446" x2="372" y2="446" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="372" y1="446" x2="372" y2="462" stroke="#BCA2FF" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="372" cy="465" r="3" fill="#BCA2FF"/>
+</svg>

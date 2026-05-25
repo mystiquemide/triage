@@ -6,6 +6,7 @@
         <!-- Left: Logo -->
         <div class="flex-1 flex justify-start items-center">
           <div class="brand logo-mark-sleek" aria-label="Triage">
+            <img class="triage-brand-mark" src="/triage-logo.svg" alt="" aria-hidden="true" />
             <span class="text-logo">Triage</span>
           </div>
         </div>
