@@ -39,6 +39,7 @@
             </a>
             <button @click="disconnect" class="pill-button secondary-pill !text-xs !py-1 !px-2 md:!py-2 md:!px-4">Disconnect</button>
           </div>
+          <button v-else @click="connect" class="pill-button primary-pill !text-xs !py-2 !px-4">Connect Wallet</button>
         </div>
       </div>
 

@@ -37,6 +37,7 @@
           <button class="pill-button primary-pill whitespace-nowrap" @click="enterApp">Connect Wallet</button>
         </div>
       </nav>
+      <p v-if="walletError" class="wallet-error-message">{{ walletError }}</p>
 
       <div id="home" class="hero-copy glass-hero">
         <h1>The smartest <span class="text-accent-mono">bug bounty</span><br/>filter</h1>
@@ -99,8 +100,10 @@ import { ref } from "vue";
 
 const emit = defineEmits(["enter"]);
 const theme = ref("dark");
+const walletError = ref("");
 
 const enterApp = async () => {
+  walletError.value = "";
   try {
     const address = await connectEvmWallet();
     if (address) {
@@ -108,6 +111,7 @@ const enterApp = async () => {
     }
   } catch (error) {
     console.error(error);
+    walletError.value = error?.message || "Wallet connection failed. Check that your wallet extension is enabled.";
   }
 };
 
