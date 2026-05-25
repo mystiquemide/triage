@@ -106,9 +106,10 @@
                 <input v-model="fundDrafts[p.id]" type="number" min="0" class="sleek-input mono-text text-sm" placeholder="Escrow amount" />
                 <button @click="fundProgram(p)" :disabled="funding===p.id" class="pill-button secondary-pill !px-4">{{ funding===p.id ? 'Funding...' : 'Fund' }}</button>
               </div>
-              <div class="flex gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button @click="selectProgram(p)" class="pill-button action-pill w-full justify-center">View Brief</button>
                 <button v-if="evmAddress && isProgramActive(p)" @click="startReport(p)" class="pill-button action-pill active w-full justify-center text-emerald-300">Submit Bug</button>
+                <button v-if="evmAddress && isProgramActive(p)" @click="archiveProgram(p)" :disabled="archiving===p.id" class="pill-button secondary-pill w-full justify-center">{{ archiving===p.id ? 'Archiving...' : 'Archive' }}</button>
               </div>
             </div>
           </div>
@@ -483,6 +484,7 @@ const creating = ref(false);
 const evaluating = ref("");
 const funding = ref("");
 const retryingPayout = ref("");
+const archiving = ref("");
 const submitTried = ref(false);
 const toast = ref(null);
 const programs = ref([]);
@@ -735,6 +737,26 @@ const fundProgram = async (program) => {
     toast_(errorMessage(e), "err");
   } finally {
     funding.value = "";
+  }
+};
+
+const archiveProgram = async (program) => {
+  if (!program?.id) return;
+  const confirmed = window.confirm(`Archive ${program.protocol_name}? It will be removed from Active Programs after StudioNet finalizes.`);
+  if (!confirmed) return;
+
+  archiving.value = program.id;
+  try {
+    ensureLocalAccount();
+    const tx = await sb.deactivateProgram(program.id);
+    lastTransactionHash.value = tx.hash || "";
+    toast_(tx.signer === "browser-wallet" ? "Archive transaction sent. Waiting for StudioNet..." : "Archive submitted. Waiting for StudioNet...", "ok");
+    await refreshProgramsUntil(() => !programs.value.some(p => p.id === program.id), 20);
+    if (selectedProgram.value?.id === program.id) selectedProgram.value = null;
+  } catch (e) {
+    toast_(errorMessage(e), "err");
+  } finally {
+    archiving.value = "";
   }
 };
 

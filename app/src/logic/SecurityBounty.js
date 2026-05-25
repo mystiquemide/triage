@@ -8,6 +8,7 @@ const EVM_WALLET_KEY = "sb_evm_wallet";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const DIRECT_STUDIO_RPC_URL = import.meta.env.VITE_STUDIO_URL || "https://studio.genlayer.com/api";
 const PRODUCTION_RPC_PATH = "/api/genlayer-rpc";
+const HIDDEN_PROGRAM_IDS = new Set(["codex_smoke_163446_61999"]);
 
 const toBigInt = (value, fallback = 0n) => {
   if (value == null) return fallback;
@@ -281,7 +282,9 @@ class SecurityBounty {
 
   async listPrograms() {
     const programs = await this._read("list_programs");
-    return (Array.isArray(programs) ? programs : []).map(normalizeProgram).filter(p => p.id);
+    return (Array.isArray(programs) ? programs : [])
+      .map(normalizeProgram)
+      .filter(p => p.id && p.is_active && !HIDDEN_PROGRAM_IDS.has(p.id));
   }
   async getProgram(pid) {
     return normalizeProgram(await this._read("get_program", [pid]));
