@@ -90,7 +90,7 @@ The frontend reads environment variables from `app/.env`.
 
 ## Deployment
 
-Production frontend: [triage-weld.vercel.app](https://triage-weld.vercel.app)
+Production frontend: [triage01.online](https://triage01.online/)
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
