@@ -3,6 +3,7 @@ import { simulator } from "genlayer-js/chains";
 
 const KEY = "sb_wallet";
 const EVM_KEY = "sb_evm_wallet";
+const WALLET_PROVIDER_KEY = "sb_wallet_provider";
 const STUDIO_CHAIN_ID = 61999;
 const STUDIO_CHAIN_ID_HEX = `0x${STUDIO_CHAIN_ID.toString(16)}`;
 const STUDIO_EXPLORER_URL = "https://genlayer-explorer.vercel.app";
@@ -16,6 +17,62 @@ function getStudioRpcUrl() {
   if (isLocalhost) return DIRECT_STUDIO_RPC_URL;
 
   return `${window.location.origin}${PRODUCTION_RPC_PATH}`;
+}
+
+const isBrowser = () => typeof window !== "undefined";
+
+const collectWindowProviders = () => {
+  if (!isBrowser()) return [];
+  const ethereum = window.ethereum;
+  if (!ethereum) return [];
+  if (Array.isArray(ethereum.providers)) return ethereum.providers.filter(provider => provider?.request);
+  return ethereum.request ? [ethereum] : [];
+};
+
+const discoverAnnouncedProviders = (timeout = 250) => new Promise((resolve) => {
+  if (!isBrowser()) {
+    resolve([]);
+    return;
+  }
+
+  const providers = [];
+  const onAnnouncement = (event) => {
+    const detail = event.detail;
+    if (detail?.provider?.request) providers.push(detail);
+  };
+
+  window.addEventListener("eip6963:announceProvider", onAnnouncement);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+  setTimeout(() => {
+    window.removeEventListener("eip6963:announceProvider", onAnnouncement);
+    resolve(providers);
+  }, timeout);
+});
+
+const providerId = (entry) => entry.info?.rdns || entry.info?.uuid || entry.info?.name || "";
+
+const chooseProvider = (announcedProviders, injectedProviders) => {
+  const savedProvider = localStorage.getItem(WALLET_PROVIDER_KEY);
+  if (savedProvider) {
+    const announced = announcedProviders.find(entry => providerId(entry) === savedProvider);
+    if (announced?.provider) return announced.provider;
+  }
+
+  const preferredAnnounced = announcedProviders.find(entry => /metamask|rabby|coinbase|okx|trust/i.test(providerId(entry)));
+  if (preferredAnnounced?.provider) {
+    localStorage.setItem(WALLET_PROVIDER_KEY, providerId(preferredAnnounced));
+    return preferredAnnounced.provider;
+  }
+
+  const preferredInjected = injectedProviders.find(provider => provider.isMetaMask || provider.isRabby || provider.isCoinbaseWallet);
+  return preferredInjected || injectedProviders[0] || null;
+};
+
+export async function getWalletProvider() {
+  const announcedProviders = await discoverAnnouncedProviders();
+  const injectedProviders = collectWindowProviders();
+  return chooseProvider(announcedProviders, injectedProviders);
 }
 
 export function getAccount() {
@@ -33,6 +90,7 @@ export function createAccount() {
 export function clearAccount() {
   localStorage.removeItem(KEY);
   localStorage.removeItem(EVM_KEY);
+  localStorage.removeItem(WALLET_PROVIDER_KEY);
 }
 
 export function getConnectedEvmAddress() {
@@ -71,9 +129,9 @@ async function switchToStudioNetwork(provider) {
 }
 
 export async function connectEvmWallet() {
-  const provider = window.ethereum;
+  const provider = await getWalletProvider();
   if (!provider?.request) {
-    throw new Error("No EVM wallet found. Please install MetaMask or another browser wallet.");
+    throw new Error("No EVM wallet found in this browser. Install or enable MetaMask, Rabby, Coinbase Wallet, or another EIP-1193 wallet extension.");
   }
 
   const accounts = await provider.request({ method: "eth_requestAccounts" });
@@ -87,7 +145,7 @@ export async function connectEvmWallet() {
 }
 
 export async function confirmWalletAction({ action, details, contractAddress }) {
-  const provider = window.ethereum;
+  const provider = await getWalletProvider();
   const address = getConnectedEvmAddress();
   if (!provider?.request || !address) {
     throw new Error("Connect your wallet before sending a transaction.");

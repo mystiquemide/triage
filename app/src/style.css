@@ -3,8 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: #000000;
+    overflow-x: hidden;
+  }
+
+  body {
+    margin: 0;
+    width: 100%;
+  }
+
   html {
     scroll-behavior: smooth;
+  }
+
+  img,
+  svg,
+  canvas,
+  video {
+    max-width: 100%;
   }
 }
 
@@ -635,6 +655,8 @@
   .app-shell {
     background: #000000;
     color: #ffffff;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .app-shell header {
@@ -947,6 +969,8 @@
   background-attachment: fixed;
   color: #ffffff;
   font-family: 'Inter', sans-serif;
+  width: 100%;
+  overflow-x: hidden;
 }
 .app-shell[data-theme="light"] {
   background-color: #f8f9fa !important;

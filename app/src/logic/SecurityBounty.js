@@ -1,5 +1,6 @@
 import { abi } from "genlayer-js";
 import { encodeFunctionData, fromHex } from "viem";
+import { getWalletProvider } from "../services/genlayer";
 
 const STUDIO_CHAIN_ID = 61999;
 const FALLBACK_GAS = 500000n;
@@ -208,7 +209,7 @@ class SecurityBounty {
       console.warn("Gas price fetch failed, using fallback gas price", error);
     }
 
-    const walletProvider = typeof window !== "undefined" ? window.ethereum : null;
+    const walletProvider = typeof window !== "undefined" ? await getWalletProvider() : null;
     const walletAddress = typeof localStorage !== "undefined" ? localStorage.getItem(EVM_WALLET_KEY) : null;
     if (walletProvider?.request && walletAddress) {
       try {
