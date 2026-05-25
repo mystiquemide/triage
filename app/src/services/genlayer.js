@@ -4,8 +4,9 @@ import { simulator } from "genlayer-js/chains";
 const KEY = "sb_wallet";
 const EVM_KEY = "sb_evm_wallet";
 const WALLET_PROVIDER_KEY = "sb_wallet_provider";
-const STUDIO_CHAIN_ID = 61999;
-const STUDIO_CHAIN_ID_HEX = `0x${STUDIO_CHAIN_ID.toString(16)}`;
+export const STUDIO_CHAIN_ID = 61999;
+export const STUDIO_CHAIN_ID_HEX = `0x${STUDIO_CHAIN_ID.toString(16)}`;
+export const STUDIO_CHAIN_NAME = "GenLayer Studio Network";
 const STUDIO_EXPLORER_URL = "https://genlayer-explorer.vercel.app";
 const DIRECT_STUDIO_RPC_URL = import.meta.env.VITE_STUDIO_URL || "https://studio.genlayer.com/api";
 const PRODUCTION_RPC_PATH = "/api/genlayer-rpc";
@@ -75,6 +76,17 @@ export async function getWalletProvider() {
   return chooseProvider(announcedProviders, injectedProviders);
 }
 
+export async function getWalletChainId(provider = null) {
+  const walletProvider = provider || await getWalletProvider();
+  if (!walletProvider?.request) return null;
+  return walletProvider.request({ method: "eth_chainId" });
+}
+
+export const isStudioChainId = (chainId) => {
+  if (!chainId) return false;
+  return String(chainId).toLowerCase() === STUDIO_CHAIN_ID_HEX.toLowerCase();
+};
+
 export function getAccount() {
   const pk = localStorage.getItem(KEY);
   if (!pk) return null;
@@ -97,35 +109,58 @@ export function getConnectedEvmAddress() {
   return localStorage.getItem(EVM_KEY);
 }
 
-async function switchToStudioNetwork(provider) {
+const networkSwitchMessage = (error) => {
+  if (error?.code === 4001) {
+    return `Approve the ${STUDIO_CHAIN_NAME} network switch in your wallet to continue.`;
+  }
+  return `Switch your wallet to ${STUDIO_CHAIN_NAME}. Chain ID: ${STUDIO_CHAIN_ID}, RPC: ${DIRECT_STUDIO_RPC_URL}, symbol: GEN.`;
+};
+
+export async function ensureStudioNetwork(provider = null) {
+  const walletProvider = provider || await getWalletProvider();
+  if (!walletProvider?.request) {
+    throw new Error("No EVM wallet found in this browser. Install or enable MetaMask, Rabby, Coinbase Wallet, or another EIP-1193 wallet extension.");
+  }
+
+  const currentChainId = await getWalletChainId(walletProvider).catch(() => null);
+  if (isStudioChainId(currentChainId)) return true;
+
   try {
-    await provider.request({
+    await walletProvider.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: STUDIO_CHAIN_ID_HEX }],
     });
   } catch (error) {
-    if (error?.code !== 4902) throw error;
+    if (error?.code !== 4902) throw new Error(networkSwitchMessage(error));
 
-    await provider.request({
-      method: "wallet_addEthereumChain",
-      params: [{
-        chainId: STUDIO_CHAIN_ID_HEX,
-        chainName: "GenLayer Studio Network",
-        nativeCurrency: {
-          name: "GEN Token",
-          symbol: "GEN",
-          decimals: 18,
-        },
-        rpcUrls: [getStudioRpcUrl()],
-        blockExplorerUrls: [STUDIO_EXPLORER_URL],
-      }],
-    });
+    try {
+      await walletProvider.request({
+        method: "wallet_addEthereumChain",
+        params: [{
+          chainId: STUDIO_CHAIN_ID_HEX,
+          chainName: STUDIO_CHAIN_NAME,
+          nativeCurrency: {
+            name: "GEN Token",
+            symbol: "GEN",
+            decimals: 18,
+          },
+          rpcUrls: [DIRECT_STUDIO_RPC_URL],
+          blockExplorerUrls: [STUDIO_EXPLORER_URL],
+        }],
+      });
 
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: STUDIO_CHAIN_ID_HEX }],
-    });
+      await walletProvider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: STUDIO_CHAIN_ID_HEX }],
+      });
+    } catch (addError) {
+      throw new Error(networkSwitchMessage(addError));
+    }
   }
+
+  const nextChainId = await getWalletChainId(walletProvider).catch(() => STUDIO_CHAIN_ID_HEX);
+  if (!isStudioChainId(nextChainId)) throw new Error(networkSwitchMessage());
+  return true;
 }
 
 export async function connectEvmWallet() {
@@ -138,7 +173,7 @@ export async function connectEvmWallet() {
   const address = accounts?.[0];
   if (!address) throw new Error("No wallet account selected.");
 
-  await switchToStudioNetwork(provider);
+  await ensureStudioNetwork(provider);
 
   localStorage.setItem(EVM_KEY, address);
   return address;
@@ -151,7 +186,7 @@ export async function confirmWalletAction({ action, details, contractAddress }) 
     throw new Error("Connect your wallet before sending a transaction.");
   }
 
-  await switchToStudioNetwork(provider);
+  await ensureStudioNetwork(provider);
 
   const message = [
     "SecurityBounty transaction confirmation",

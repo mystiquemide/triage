@@ -23,6 +23,15 @@
               <span class="wallet-chip-label">Balance</span>
               <span class="wallet-chip-value">{{ walletBalanceLabel }}</span>
             </button>
+            <button
+              @click="switchNetwork"
+              class="network-chip"
+              :class="{ active: walletNetworkOk, warn: !walletNetworkOk }"
+              :disabled="walletNetworkLoading"
+              :title="walletNetworkOk ? 'Connected to GenLayer StudioNet' : 'Switch wallet to GenLayer StudioNet'"
+            >
+              {{ walletNetworkLabel }}
+            </button>
             <div class="wallet-address-chip" :title="evmAddress">
               <span class="hidden xl:inline">{{ evmAddress.slice(0,8) }}...{{ evmAddress.slice(-6) }}</span>
               <span class="hidden lg:inline xl:hidden">{{ evmAddress.slice(0,6) }}...</span>
@@ -461,8 +470,13 @@ import {
   clearAccount,
   createBountyClient,
   connectEvmWallet,
+  ensureStudioNetwork,
   getConnectedEvmAddress,
+  getWalletChainId,
+  getWalletProvider,
+  isStudioChainId,
   setConnectedEvmAddress,
+  STUDIO_CHAIN_NAME,
 } from "../services/genlayer";
 import SecurityBounty from "../logic/SecurityBounty";
 
@@ -476,6 +490,9 @@ const evmAddress = ref(getConnectedEvmAddress());
 const userAddress = ref(account.value?.address || null);
 const walletBalanceWei = ref(null);
 const walletBalanceLoading = ref(false);
+const walletNetworkOk = ref(false);
+const walletNetworkLoading = ref(false);
+let activeWalletProvider = null;
 
 const emit = defineEmits(["exit"]);
 
@@ -530,6 +547,10 @@ const formatWalletGen = wei => {
   return `${whole.toString()}${fractional ? `.${fractional}` : ""} GEN`;
 };
 const walletBalanceLabel = computed(() => walletBalanceLoading.value ? "Loading..." : formatWalletGen(walletBalanceWei.value));
+const walletNetworkLabel = computed(() => {
+  if (walletNetworkLoading.value) return "Switching...";
+  return walletNetworkOk.value ? "GenLayer" : "Switch to GenLayer";
+});
 const parseJson = value => { try { return value ? JSON.parse(value) : {}; } catch { return {}; } };
 const programMeta = p => parseJson(p?.program_metadata);
 const reportMeta = r => parseJson(r?.report_metadata);
@@ -590,12 +611,64 @@ const payoutClass = s => ({ pending:"text-yellow-400", emitted:"text-emerald-400
 const canRetryPayout = r => r?.status === "accepted" && r?.reward && r.reward !== "0" && Number.parseInt(String(r.payout_attempts || "0"), 10) < 3;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const loadWalletBalance = async () => {
-  const provider = window.ethereum;
+const loadWalletNetwork = async (provider = null) => {
+  const walletProvider = provider || await getWalletProvider();
+  if (!walletProvider?.request) {
+    walletNetworkOk.value = false;
+    return false;
+  }
+
+  const chainId = await getWalletChainId(walletProvider).catch(() => null);
+  walletNetworkOk.value = isStudioChainId(chainId);
+  return walletNetworkOk.value;
+};
+
+const switchNetwork = async ({ silent = false } = {}) => {
+  walletNetworkLoading.value = true;
+  try {
+    const provider = await getWalletProvider();
+    await ensureStudioNetwork(provider);
+    walletNetworkOk.value = true;
+    await loadWalletBalance({ skipNetworkCheck: true });
+    if (!silent) toast_(`Wallet switched to ${STUDIO_CHAIN_NAME}.`, "ok");
+    return true;
+  } catch (e) {
+    walletNetworkOk.value = false;
+    walletBalanceWei.value = null;
+    if (!silent) toast_(errorMessage(e), "err");
+    return false;
+  } finally {
+    walletNetworkLoading.value = false;
+  }
+};
+
+const attachWalletListeners = async () => {
+  const provider = await getWalletProvider();
+  if (provider === activeWalletProvider) return provider;
+
+  activeWalletProvider?.removeListener?.("accountsChanged", handleAccountsChanged);
+  activeWalletProvider?.removeListener?.("chainChanged", handleChainChanged);
+  activeWalletProvider = provider;
+  activeWalletProvider?.on?.("accountsChanged", handleAccountsChanged);
+  activeWalletProvider?.on?.("chainChanged", handleChainChanged);
+  return provider;
+};
+
+const loadWalletBalance = async ({ skipNetworkCheck = false } = {}) => {
+  const provider = await getWalletProvider();
   if (!provider?.request || !evmAddress.value) {
     walletBalanceWei.value = null;
     return;
   }
+
+  if (!skipNetworkCheck) {
+    const onStudioNet = await loadWalletNetwork(provider);
+    if (!onStudioNet) {
+      walletBalanceWei.value = null;
+      return;
+    }
+  }
+
   walletBalanceLoading.value = true;
   try {
     const balance = await provider.request({
@@ -624,8 +697,10 @@ const ensureLocalAccount = () => {
 const connect = async () => {
   try {
     const address = await connectEvmWallet();
+    await attachWalletListeners();
     ensureLocalAccount();
     evmAddress.value = address;
+    walletNetworkOk.value = true;
     await loadWalletBalance();
     toast_("Wallet connected!", "ok");
     loadMine();
@@ -639,6 +714,7 @@ const disconnect = () => {
   account.value = null;
   evmAddress.value = null;
   walletBalanceWei.value = null;
+  walletNetworkOk.value = false;
   userAddress.value = null;
   myReports.value = [];
   const c = createBountyClient(null);
@@ -656,9 +732,17 @@ const handleAccountsChanged = (accounts) => {
   myReports.value = [];
   if (address) {
     ensureLocalAccount();
+    loadWalletNetwork();
     loadWalletBalance();
     loadMine();
+  } else {
+    walletNetworkOk.value = false;
   }
+};
+
+const handleChainChanged = async () => {
+  await loadWalletNetwork();
+  await loadWalletBalance();
 };
 
 const loadPrograms = async () => {
@@ -804,9 +888,9 @@ const retryPayout = async (reportId) => {
 };
 
 onMounted(async () => {
-  window.ethereum?.on?.("accountsChanged", handleAccountsChanged);
-  window.ethereum?.on?.("chainChanged", loadWalletBalance);
+  await attachWalletListeners();
   if (evmAddress.value) ensureLocalAccount();
+  if (evmAddress.value) await loadWalletNetwork(activeWalletProvider);
   if (evmAddress.value) await loadWalletBalance();
   await Promise.all([loadPrograms(), loadReports(), loadVulns()]);
   if (evmAddress.value) await loadMine();
@@ -817,7 +901,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  window.ethereum?.removeListener?.("accountsChanged", handleAccountsChanged);
-  window.ethereum?.removeListener?.("chainChanged", loadWalletBalance);
+  activeWalletProvider?.removeListener?.("accountsChanged", handleAccountsChanged);
+  activeWalletProvider?.removeListener?.("chainChanged", handleChainChanged);
 });
 </script>
