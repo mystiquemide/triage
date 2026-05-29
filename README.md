@@ -28,6 +28,12 @@ Bug bounty programs are valuable, but first-pass triage is slow, repetitive, and
   <img src="docs/assets/screenshot-mobile.png" alt="Triage mobile landing screen" width="260" />
 </p>
 
+## Live Contract
+
+| Network | Chain ID | Contract |
+| --- | ---: | --- |
+| GenLayer StudioNet | `61999` | `0x7860cc3Ff12FaCb93143Ca955e74Ab5dfbAFCEBa` |
+
 ## Tech Stack
 
 - Frontend: Vue 3, Vite, Tailwind CSS
